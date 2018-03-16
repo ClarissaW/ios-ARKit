@@ -16,7 +16,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        self.sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
         // Set the view's delegate
         sceneView.delegate = self
         
@@ -36,27 +36,30 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 //        sceneView.autoenablesDefaultLighting = true // add shadow and lights, looks more 3D
 
         // Create a sphere
+//        let sphere = SCNSphere(radius: 0.1)
+//        let material = SCNMaterial()
+////        material.diffuse.contents = UIImage(#imageLiteral(resourceName: "moon.jpg"))
+//        material.diffuse.contents = UIImage(named: "art.scnassets/moon.jpg")
+//        sphere.materials = [material]
+//        //nodes are points in 3D, position...
+//        let node = SCNNode()
+//        node.position = SCNVector3(0, 0.1, -0.5)
+//        node.geometry = sphere
+//        sceneView.scene.rootNode.addChildNode(node)
+//        sceneView.autoenablesDefaultLighting = true // add shadow and lights, looks more 3D
         
-        let sphere = SCNSphere(radius: 0.1)
-        let material = SCNMaterial()
-//        material.diffuse.contents = UIImage(#imageLiteral(resourceName: "moon.jpg"))
-        material.diffuse.contents = UIImage(named: "art.scnassets/moon.jpg")
-        sphere.materials = [material]
-        //nodes are points in 3D, position...
-        let node = SCNNode()
-        node.position = SCNVector3(0, 0.1, -0.5)
-        node.geometry = sphere
-        sceneView.scene.rootNode.addChildNode(node)
-        sceneView.autoenablesDefaultLighting = true // add shadow and lights, looks more 3D
         
+        
+        // Create a new scene
+        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
+        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
+            // Name is the one under diceCollada - scene graph - Dice
+            // recursively : allow searching the tree including all the subtrees
+            diceNode.position = SCNVector3(0, 0, -0.1)
+            sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
+        }
+        sceneView.autoenablesDefaultLighting = true
 
-        
-        
-//        // Create a new scene
-//        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-//
-//        // Set the scene to the view
-//        sceneView.scene = scene
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -64,6 +67,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = .horizontal // setting this will trigger the function of didAdd
         print("World Tracking is supported \(ARWorldTrackingConfiguration.isSupported)")
         print("AR Configuration is supported \(ARConfiguration.isSupported)")
         // Run the view's session
@@ -107,4 +111,27 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Reset tracking and/or remove existing anchors if consistent tracking is required
         
     }
+    
+    // A delegate function
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        //cooperate with anchor to place or visualize things, anchor - real world position
+        if anchor is ARPlaneAnchor{ // to check whether added thing is plane anchor
+            //print("Plane detected")
+            let planeAnchor = anchor as! ARPlaneAnchor
+            let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+            let planeNode = SCNNode()
+            planeNode.position = SCNVector3(planeAnchor.center.x, 0, planeAnchor.center.z)
+            //现在这个是立起来的平面，需要clockwise旋转90度之后才能变成horizontal的
+            planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2, 1, 0, 0)
+            // add the material to the planeNode, and add the planeNode into node, we will see the grid in the view
+            let gridMaterial = SCNMaterial()
+            gridMaterial.diffuse.contents = UIImage(named: "art.scnassets/grid.png")
+            plane.materials = [gridMaterial]
+            node.addChildNode(planeNode)
+            
+        }else{
+            return
+        }
+    }
+    
 }

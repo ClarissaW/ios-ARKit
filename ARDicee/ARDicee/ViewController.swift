@@ -13,7 +13,7 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
-    
+    var diceArray = [SCNNode]()
     override func viewDidLoad() {
         super.viewDidLoad()
         self.sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
@@ -96,19 +96,39 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                     // recursively : allow searching the tree including all the subtrees
                     //diceNode.position = SCNVector3(0, 0, -0.1)
                     diceNode.position = SCNVector3(hitResult.worldTransform.columns.3.x, hitResult.worldTransform.columns.3.y + diceNode.boundingSphere.radius, hitResult.worldTransform.columns.3.z)
+                    diceArray.append(diceNode)
                     sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
+                    roll(dice: diceNode)
                     
-                    let randomX = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
-                    let randomZ = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
-                    //Y does not change. The height is always that. X and Y is the facet we are facing
-                    
-                    diceNode.runAction(SCNAction.rotateBy(x: CGFloat(randomX) * 5, y: 0, z: CGFloat(randomZ) * 5, duration: 0.5))
-                    //multiply 5 can make the dice as any degree, from visualization part, it will look like rolling faster
                 }
             }
         }
     }
+    
+    func rollAll(){
+        if !diceArray.isEmpty{
+            for dice in diceArray{
+                roll(dice: dice)
+            }
+        }
+    }
+    
+    func roll(dice : SCNNode){
+        let randomX = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
+        let randomZ = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
+        //Y does not change. The height is always that. X and Y is the facet we are facing
+        
+        dice.runAction(SCNAction.rotateBy(x: CGFloat(randomX) * 5, y: 0, z: CGFloat(randomZ) * 5, duration: 0.5))
+        //multiply 5 can make the dice as any degree, from visualization part, it will look like rolling faster
+    }
 
+    @IBAction func rollAgain(_ sender: Any) {
+        rollAll()
+    }
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        rollAll()
+    }// shake the phone to roll the dice
+    
     // MARK: - ARSCNViewDelegate
     
 /*

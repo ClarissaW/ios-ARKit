@@ -50,14 +50,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         
         
-        // Create a new scene
-        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
-        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
-            // Name is the one under diceCollada - scene graph - Dice
-            // recursively : allow searching the tree including all the subtrees
-            diceNode.position = SCNVector3(0, 0, -0.1)
-            sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
-        }
+        
         sceneView.autoenablesDefaultLighting = true
 
     }
@@ -81,9 +74,32 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.pause()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Release any cached data, images, etc that aren't in use.
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // touches are from users, use ARKit to convert to real world location
+        // could enable multiple touches// isMultipleTouchEnabled
+        if let touch = touches.first{
+            let touchLocation = touch.location(in: sceneView)
+            // convert 2d to 3d
+            let results = sceneView.hitTest(touchLocation, types: .existingPlaneUsingExtent)
+            
+//            if !results.isEmpty{
+//                print("touched the plane")
+//            }else{
+//                print("touched somewhere else")
+//            }
+            
+            if let hitResult = results.first{
+                // Create a new scene
+                let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
+                if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
+                    // Name is the one under diceCollada - scene graph - Dice
+                    // recursively : allow searching the tree including all the subtrees
+                    //diceNode.position = SCNVector3(0, 0, -0.1)
+                    diceNode.position = SCNVector3(hitResult.worldTransform.columns.3.x, hitResult.worldTransform.columns.3.y + diceNode.boundingSphere.radius, hitResult.worldTransform.columns.3.z)
+                    sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
+                }
+            }
+        }
     }
 
     // MARK: - ARSCNViewDelegate

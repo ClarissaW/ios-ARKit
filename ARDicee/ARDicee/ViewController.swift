@@ -97,6 +97,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                     //diceNode.position = SCNVector3(0, 0, -0.1)
                     diceNode.position = SCNVector3(hitResult.worldTransform.columns.3.x, hitResult.worldTransform.columns.3.y + diceNode.boundingSphere.radius, hitResult.worldTransform.columns.3.z)
                     sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
+                    
+                    let randomX = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
+                    let randomZ = Float(arc4random_uniform(4) + 1) * (Float.pi / 2)
+                    //Y does not change. The height is always that. X and Y is the facet we are facing
+                    
+                    diceNode.runAction(SCNAction.rotateBy(x: CGFloat(randomX) * 5, y: 0, z: CGFloat(randomZ) * 5, duration: 0.5))
+                    //multiply 5 can make the dice as any degree, from visualization part, it will look like rolling faster
                 }
             }
         }

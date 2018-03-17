@@ -89,21 +89,25 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 //            }
             
             if let hitResult = results.first{
-                // Create a new scene
-                let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
-                if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
-                    // Name is the one under diceCollada - scene graph - Dice
-                    // recursively : allow searching the tree including all the subtrees
-                    //diceNode.position = SCNVector3(0, 0, -0.1)
-                    diceNode.position = SCNVector3(hitResult.worldTransform.columns.3.x, hitResult.worldTransform.columns.3.y + diceNode.boundingSphere.radius, hitResult.worldTransform.columns.3.z)
-                    diceArray.append(diceNode)
-                    sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
-                    roll(dice: diceNode)
-                    
-                }
+               addDice(atLoacation: hitResult)
             }
         }
     }
+    func addDice(atLoacation location:ARHitTestResult){
+        // Create a new scene
+        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
+        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
+            // Name is the one under diceCollada - scene graph - Dice
+            // recursively : allow searching the tree including all the subtrees
+            //diceNode.position = SCNVector3(0, 0, -0.1)
+            diceNode.position = SCNVector3(location.worldTransform.columns.3.x, location.worldTransform.columns.3.y + diceNode.boundingSphere.radius, location.worldTransform.columns.3.z)
+            diceArray.append(diceNode)
+            sceneView.scene.rootNode.addChildNode(diceNode) // if add ! after diceNode, app may crash when diceNode is nil, be safe, add if let...
+            roll(dice: diceNode)
+            
+        }
+    }
+    
     
     func rollAll(){
         if !diceArray.isEmpty{
@@ -167,26 +171,44 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
     }
     
+    // MARK: - ARSCNViewDelegateMethods
     // A delegate function
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         //cooperate with anchor to place or visualize things, anchor - real world position
-        if anchor is ARPlaneAnchor{ // to check whether added thing is plane anchor
-            //print("Plane detected")
-            let planeAnchor = anchor as! ARPlaneAnchor
-            let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
-            let planeNode = SCNNode()
-            planeNode.position = SCNVector3(planeAnchor.center.x, 0, planeAnchor.center.z)
-            //现在这个是立起来的平面，需要clockwise旋转90度之后才能变成horizontal的
-            planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2, 1, 0, 0)
-            // add the material to the planeNode, and add the planeNode into node, we will see the grid in the view
-            let gridMaterial = SCNMaterial()
-            gridMaterial.diffuse.contents = UIImage(named: "art.scnassets/grid.png")
-            plane.materials = [gridMaterial]
-            node.addChildNode(planeNode)
-            
-        }else{
-            return
-        }
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {return}
+        let planeNode = createPlane(withPlaneAnchor: planeAnchor)
+        node.addChildNode(planeNode)
+//        if anchor is ARPlaneAnchor{ // to check whether added thing is plane anchor
+//            //print("Plane detected")
+//            let planeAnchor = anchor as! ARPlaneAnchor
+//            let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+//            let planeNode = SCNNode()
+//            planeNode.position = SCNVector3(planeAnchor.center.x, 0, planeAnchor.center.z)
+//            //现在这个是立起来的平面，需要clockwise旋转90度之后才能变成horizontal的
+//            planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2, 1, 0, 0)
+//            // add the material to the planeNode, and add the planeNode into node, we will see the grid in the view
+//            let gridMaterial = SCNMaterial()
+//            gridMaterial.diffuse.contents = UIImage(named: "art.scnassets/grid.png")
+//            plane.materials = [gridMaterial]
+//            node.addChildNode(planeNode)
+//
+//        }else{
+//            return
+//        }
     }
+    // MARK: - Plane Render Method
+    func createPlane(withPlaneAnchor planeAnchor : ARPlaneAnchor) -> SCNNode{
+        let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+        let planeNode = SCNNode()
+        planeNode.position = SCNVector3(planeAnchor.center.x, 0, planeAnchor.center.z)
+        //现在这个是立起来的平面，需要clockwise旋转90度之后才能变成horizontal的
+        planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2, 1, 0, 0)
+        // add the material to the planeNode, and add the planeNode into node, we will see the grid in the view
+        let gridMaterial = SCNMaterial()
+        gridMaterial.diffuse.contents = UIImage(named: "art.scnassets/grid.png")
+        plane.materials = [gridMaterial]
+        return planeNode
+    }
+    
     
 }

@@ -129,6 +129,18 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         rollAll()
     }// shake the phone to roll the dice
     
+    @IBAction func removeAllDicee(_ sender: Any) {
+        if !diceArray.isEmpty{
+            for dice in diceArray{
+                dice.removeFromParentNode()
+            }
+        }
+    }
+    
+    
+    
+    
+    
     // MARK: - ARSCNViewDelegate
     
 /*

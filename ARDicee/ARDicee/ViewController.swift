@@ -5,7 +5,8 @@
 //  Created by Wang, Zewen on 2018-03-14.
 //  Copyright © 2018 Wang, Zewen. All rights reserved.
 //
-
+//3D source
+//https://www.turbosquid.com/
 import UIKit
 import SceneKit
 import ARKit

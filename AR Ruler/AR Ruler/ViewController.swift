@@ -59,11 +59,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func calculate(){
         let start = dotNodes[0].position
         let end = dotNodes[1].position
+        //xz-grid because we are facing xy surface
         let distance = sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2) + pow(end.z - start.z, 2))
         print(distance)
+        updateText(text: String(distance), atPosition: end)
         //print(abs(distance))
         
-        //xz-grid because we are facing xy surface
+    }
+    
+    func updateText(text: String, atPosition position: SCNVector3){
+        let textGeometry = SCNText(string: text, extrusionDepth: 1.0) // depth of 3D text
+        textGeometry.firstMaterial?.diffuse.contents = UIColor.red
+        let textNode = SCNNode()
+        textNode.geometry = textGeometry
+        textNode.position = SCNVector3(position.x, position.y, position.z)
+        textNode.scale = SCNVector3(0.01, 0.01, 0.01) // reduce the size by 1% of the original figure
+        sceneView.scene.rootNode.addChildNode(textNode)
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
